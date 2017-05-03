@@ -1,0 +1,231 @@
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Sansita" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"/>
+    <link th:href="@{/css/main.css}" href="/css/main.css"  rel="stylesheet" type="text/css"/>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"/>
+    <title>Twitter</title>
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <h1>Welcome to the Twitter web client!</h1>
+    <div id="mainPanel" class="row">
+        <div id="searchProfileSection" class="first column col-sm-12">
+            <p class="panelDescription">Search for a profile</p>
+            <div id="searchChannelPanel">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <input type="search" id="searchChannelInput" placeholder="Profile name"/>
+                    </div>
+                    <div class="col-sm-6">
+                        <p><button type="submit" id="searchChannelBtn">Search by profile name</button></p>
+                    </div>
+                </div>
+                <div class="row allProfiles">
+
+                </div>
+            </div>
+        </div>
+        <div id="searchTweetSection" class="last column hidden">
+            <div id="searchTweetPanel">
+                <p class="panelDescription">Search for tweets by keyword</p>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <input type="search" id="searchTweetInput" placeholder="Phrase"/>
+                    </div>
+                    <div class="col-sm-6">
+                        <p><button type="submit" id="searchTweetBtn">Search by phrase</button></p>
+                    </div>
+                </div>
+                <div class="row allTweets">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+
+
+<script th:inline="javascript">
+var accessToken = [[${accessToken}]];
+var accessTokenSecret = [[${accessTokenSecret}]];
+var pageChannels = 1;
+var pageTweets = 1;
+var profiles;
+var tweets;
+
+    
+$('.w3-container').on({
+    mouseenter: function () {
+        $(this).css("background-color", "#D3D8ED");
+    },
+    mouseleave: function () {
+        $(this).css("background-color", "#A5E6FD");
+    }
+});
+
+
+$('#searchChannelBtn').click(function() {
+    $( ".allTweets" ).empty();
+    var url = "http://localhost:8080/twitter/getChannel";
+    var channelNameInput = $('#searchChannelInput').val();
+    var request = $.ajax({
+        method: 'GET',
+        url: url,
+        data: { accessToken: accessToken, accessTokenSecret : accessTokenSecret, channelName : channelNameInput} ,
+        contentType: 'application/json; charset=utf-8',
+        headers: {
+                    'Access-Control-Allow-Origin': '*'
+        }
+    }).then(function(data) {
+       profiles = data;
+       if(profiles.length > 0) {
+           $( ".allProfiles" ).empty();
+           $( ".allTweets" ).empty();
+           hideTweetsSection();
+           for(i in profiles) {
+                $(".allProfiles").append(generateDivForProfile(profiles[i]));
+           }
+       } else {
+           alert("Data not found.")
+       }
+
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+       alert("Error while processing request.");
+    });
+});
+    
+
+    
+$(document).on('click', '.w3-container', function(e) {
+    var url = "http://localhost:8080/twitter/getChannelTweets";
+    var screenName = $(this).attr('id');
+    var request = $.ajax({
+        method: 'GET',
+        url: url,
+        data: {accessToken: accessToken, accessTokenSecret : accessTokenSecret, screenName: screenName} ,
+        contentType: 'application/json; charset=utf-8',
+        headers: {
+                    'Access-Control-Allow-Origin': '*'
+        }
+    }).done(function(data) {
+      var tweets = data;
+       if(tweets.length > 0) {
+           $( ".allTweets" ).empty();
+           for(i in tweets) {
+                $(".allTweets").append(generateDivForTweet(tweets[i]));
+           }
+           showTweetsSection();
+       } else {
+           hideTweetsSection();
+       }
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+       alert("Error while processing request.");
+    });
+
+});
+    
+    
+$('#searchTweetBtn').click(function() {
+    
+    var searchTerm = $('#searchTweetInput').val();
+    if(searchTerm === "") {
+        alert("Enter a phrase");
+    } else {
+        var url = "http://localhost:8080/twitter/searchChannelTweets";
+        var screenName = $(this).attr('id');
+        var request = $.ajax({
+            method: 'GET',
+            url: url,
+            data: {accessToken: accessToken, accessTokenSecret : accessTokenSecret, screenName: screenName, searchTerm: searchTerm} ,
+            contentType: 'application/json; charset=utf-8',
+            headers: {
+                    'Access-Control-Allow-Origin': '*'
+            }
+        }).done(function(data) {
+            var tweets = data;
+            if(tweets.length > 0) {
+                $("#searchChannelInput").val("");
+                $( ".allTweets" ).empty();
+                $( ".allProfiles" ).empty();
+                for(i in tweets) {
+                    $(".allTweets").append(generateDivForTweet(tweets[i]));
+                }
+                showTweetsSection();
+            } else {
+                hideTweetsSection();
+            }
+        });
+
+        request.fail(function(jqXHR, textStatus) {
+            alert("Error while processing request.");
+        });
+ 
+    }
+});
+    
+
+    
+
+function generateDivForTweet(tweet) {
+  var $newTweetDiv = $('<div class="tweet w3-container">' +
+  '<div class="w3-card-4" style="width:100%">' +
+  '<header class="w3-container w3-light-grey">' +
+  "<h3>@" + tweet.fromUser + "</h3>" +
+  "</header>" +
+  '<div class="w3-container">' +
+  "<hr/>" +
+  "<p>" + tweet.text + "</p><br/>" + 
+  "</div>" +
+  "</div>" +
+  "</div>");
+  return $newTweetDiv;                       
+}
+
+function generateDivForProfile(profile) {
+    var $newdiv = $('<div id="' + profile.screenName + '" class="w3-container" >' +
+    '<div class="w3-card-4" style="width:100%">' +
+    '<header class="w3-container w3-light-grey">' +
+    "<h3>" + profile.name + "</h3>" +
+    "</header>" +
+    '<div class="w3-container">' +
+    "<hr/>" +
+    '<img src="' + profile.profileImageUrl + '" alt="Profile image" class="w3-left w3-circle w3-margin-right" style="width:60px"/>' +
+    "<p>" + profile.description + "</p><br/>" +
+    "</div>" +
+    "</div>" +
+    "</div>");
+    return $newdiv;
+}
+    
+function hideTweetsSection() {
+    jQuery('.column.first').removeClass('col-sm-6');
+    jQuery('.column.first').addClass('col-sm-12');
+    jQuery('.column.last').removeClass('col-sm-6');
+    jQuery('.column.last').addClass('hidden');
+}
+
+
+function showTweetsSection() {
+    jQuery('.column.first').addClass('col-sm-6');
+    jQuery('.column.last').addClass('col-sm-6');
+    jQuery('.column.last').removeClass('hidden');
+}
+
+
+
+
+</script>
+
+</html>

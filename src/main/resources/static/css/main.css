@@ -1,0 +1,55 @@
+
+h1 {
+    font-family: 'Sansita', sans-serif;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 30px;
+}
+
+body {
+    background-color: #A8DCFD;
+}
+
+input {
+    width: 100%;
+}
+
+#mainPanel {
+    background-color: #A5E6FD;
+}
+
+#searchChannelPanel {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+#searchTweetPanel {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+.panelDescription {
+    text-align: center;
+    font-family: 'Contrail One', cursive;
+}
+
+#searchProfileSection {
+    border: 1px solid black;
+}
+
+#searchTweetSection {
+    border: 1px solid black;
+}
+
+.allProfiles {
+   padding-top: 20px;
+}
+
+.singleProfile {
+   border: 1px solid black;
+   padding-top: 5px;
+}
+
+img {
+  padding-bottom: 10px;
+}
